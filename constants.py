@@ -1,12 +1,13 @@
 def get_question(name):
     return {
         "text": "Lutfen {} lokasyonunu isaretleyip gonderin".format(name),
-        "location": {
-            "text": "Lutfen {} resmini gonderin".format(name),
-            "photo": {}
-        }
+        # "location": {
+        #     "text": "Lutfen {} resmini gonderin".format(name),
+        #     "photo": {}
+        # }
     }
 
+REQUEST_INFO_TEMPLATE = "Lutfen simdi {} lokasyonunu ve fotografini paylasin."
 DEFAULT_SESSION = {
     "user": {},
     "history": [],
@@ -29,7 +30,7 @@ OPTIONS = {
     },
     "Risk": {
         "text": "Turu nedir?",
-        "Elektrik tel temasi": get_question("tanker"),
-        "Diger tehlike (kirik cam, sondurulmemis ates vb.": get_question("tehlike"),
+        "Elektrik tel temasi": get_question("tehlike"),
+        "Diger tehlike (kirik cam, sondurulmemis ates vb.)": get_question("tehlike"),
     }
 }
