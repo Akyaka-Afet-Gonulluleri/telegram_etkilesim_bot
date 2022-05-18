@@ -124,6 +124,9 @@ def option_selected(update: Update, context: CallbackContext) -> None:
 
     print("Query data", query)
     sess = get_session(query.from_user.username)
+    # ensure user data is included
+    if not sess["user"] or not sess["user"].username:
+        sess["user"] = update.effective_user
     # Get the data from the callback_data.
     # If you're using a type checker like MyPy, you'll have to use typing.cast
     # to make the checker get the expected type of the callback_data
