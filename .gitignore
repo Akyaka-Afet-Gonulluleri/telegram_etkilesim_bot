@@ -3,3 +3,4 @@ images/*
 *.pickle
 **/*.pyc
 .vscode
+.env

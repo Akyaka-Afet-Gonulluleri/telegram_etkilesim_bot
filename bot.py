@@ -3,8 +3,11 @@ import logging
 from tabnanny import check
 from typing import List
 from copy import deepcopy
+import os
 
-from config import TELEGRAM_TOKEN
+#from config import TELEGRAM_TOKEN
+from dotenv import load_dotenv
+
 from constants import DEFAULT_SESSION, OPTIONS, REQUEST_INFO_TEMPLATE
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update, KeyboardButton, ReplyKeyboardMarkup, ReplyKeyboardRemove
@@ -18,6 +21,20 @@ from telegram.ext import (
     InvalidCallbackData,
     PicklePersistence,
 )
+load_dotenv()
+
+TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
+APP_ENV = os.getenv('APP_ENV','development')
+PORT = int(os.environ.get('PORT', '5000'))
+APP_URL = os.environ.get('APP_URL')
+
+if os.path.exists('config.py'):
+    from config import TELEGRAM_TOKEN
+
+
+if not TELEGRAM_TOKEN:
+    print('please specify TELEGRAM_TOKEN')
+    exit(-1)
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO
@@ -188,7 +205,11 @@ def main() -> None:
     updater.dispatcher.add_handler(CallbackQueryHandler(option_selected))
 
     # Start the Bot
-    updater.start_polling()
+    if APP_ENV == 'production':
+        updater.start_webhook(listen="0.0.0.0",port=PORT,url_path=TELEGRAM_TOKEN)
+        updater.bot.setWebhook(APP_URL + TELEGRAM_TOKEN)
+    else:
+        updater.start_polling()
 
     # Run the bot until the user presses Ctrl-C or the process receives SIGINT,
     # SIGTERM or SIGABRT
