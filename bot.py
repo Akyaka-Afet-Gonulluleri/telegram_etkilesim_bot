@@ -207,7 +207,6 @@ def main() -> None:
     # Start the Bot
     if APP_ENV == 'production':
         updater.start_webhook(listen="0.0.0.0",port=PORT,url_path=TELEGRAM_TOKEN, webhook_url=APP_URL + TELEGRAM_TOKEN)
-        updater.bot.setWebhook(APP_URL + TELEGRAM_TOKEN)
     else:
         updater.start_polling()
 
