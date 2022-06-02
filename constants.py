@@ -18,19 +18,28 @@ DEFAULT_SESSION = {
 }
 
 OPTIONS = {
-    "Yangin": {
-        "text": "Ne gordunuz?",
+    "Yangın": {
+        "text": "Ne gördünüz?",
         "Duman": get_question("olay"),
-        "Ates": get_question("olay"),
+        "Ateş": get_question("olay"),
     },
-    "Su kaynagi": {
-        "text": "Turu nedir?",
-        "Tanker": get_question("tanker"),
+    "Su kaynağı": {
+        "text": "Türü nedir?",
         "Hidrant": get_question("hidrant"),
+        "Gölet": get_question("golet"),
+        "Dere": get_question("dere"),
+        "Su motoru": get_question("motor"),
+        "Jeneratörlu su pompası": get_question("pompa"),
+        "Diğer": get_question("su kaynağı")
+    },
+    "Tanker": {
+        "text": "Tankerin türü nedir?",
+        "Su tankeri": get_question("tanker"),
+        "Yangın tankeri (püskürtmeli)": get_question("tanker"),
     },
     "Risk": {
-        "text": "Turu nedir?",
-        "Elektrik tel temasi": get_question("tehlike"),
-        "Diger tehlike (kirik cam, sondurulmemis ates vb.)": get_question("tehlike"),
+        "text": "Türü nedir?",
+        "Elektrik tel teması": get_question("tehlike"),
+        "Diğer tehlike (kırık cam, söndürülmemiş ateş vb.)": get_question("tehlike"),
     }
 }

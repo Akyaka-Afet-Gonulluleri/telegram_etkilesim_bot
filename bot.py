@@ -3,6 +3,8 @@ import logging
 from tabnanny import check
 from typing import List
 from copy import deepcopy
+from pymemri.pod.client import PodClient
+from schema import Fire, Risk, WaterSource, Tank, Person, Edge
 import os
 
 #from config import TELEGRAM_TOKEN
@@ -29,12 +31,20 @@ PORT = int(os.environ.get('PORT', '5000'))
 APP_URL = os.environ.get('APP_URL')
 
 if os.path.exists('config.py'):
-    from config import TELEGRAM_TOKEN
+    from config import TELEGRAM_TOKEN, POD_OWNER, POD_KEY, GROUP_CHAT_ID
 
 
 if not TELEGRAM_TOKEN:
     print('please specify TELEGRAM_TOKEN')
     exit(-1)
+
+if not POD_OWNER or not POD_KEY:
+    print('please specify POD_OWNER and POD_KEY')
+    exit(-1)
+
+# Init Pod connection
+pod = PodClient(owner_key=POD_OWNER, database_key=POD_KEY)
+pod.add_to_schema(Person, Fire, Risk, WaterSource, Tank)
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO
@@ -50,6 +60,36 @@ def get_session(name):
     except:
         sessions[name] = deepcopy(DEFAULT_SESSION)
         return sessions[name]
+
+def save_session(session):
+    user = session["user"]
+    hist = session["history"]
+    data = session["data"]
+    items = []
+    edges = []
+    try:
+        reporter = pod.search({"type":"Person", "displayName": user["username"]})[0]
+        print("We already have the reporter in db", reporter.displayName)
+    except:
+        reporter = Person(displayName=user["username"], firstName=user["first_name"])
+        print("Adding new reporter:", reporter.displayName)
+        items.append(reporter)
+
+    if hist[0] == "Yangın":
+        item = Fire(semptom=hist[1], status="Unconfirmed")
+    elif hist[0] == "Su kaynağı":
+        item = WaterSource(sourceType=hist[1], status="Unconfirmed")
+    elif hist[0] == "Tanker":
+        item = Tank(tankType=hist[1], status="Unconfirmed")
+    elif hist[0] == "Risk":
+        item = Risk(riskType=hist[1], status="Unconfirmed")
+    
+    edges.append(Edge(item, reporter, "reporter"))
+    # set latlong
+    item.latitude = data["location"][0]["latitude"]
+    item.longitude = data["location"][0]["longitude"]
+    items.append(item)
+    pod.bulk_action(create_items=items, create_edges=edges)
 
 
 def start(update: Update, context: CallbackContext) -> None:
@@ -97,11 +137,12 @@ def check_finalized(update: Update, context: CallbackContext):
 def finalize(update: Update, context: CallbackContext) -> None:
     sess = get_session(update.effective_user.username)
     logger.info("New report {}".format(sess))
-    context.bot.send_message("-723669546", "Yeni bildirim yapildi!\nGonderen: {}\nBildiri: {}".format(sess["user"]["username"], "-".join(sess["history"])))
+    save_session(sess)
+    context.bot.send_message(GROUP_CHAT_ID, "Yeni bildirim yapildi!\nGonderen: {}\nBildiri: {}".format(sess["user"]["username"], "-".join(sess["history"])))
     for l in sess["data"]["location"]:
-        context.bot.send_location("-723669546", location=l)
+        context.bot.send_location(GROUP_CHAT_ID, location=l)
     for p in sess["data"]["photo"]:
-        context.bot.send_photo("-723669546", open("images/{}".format(p.file_unique_id), 'rb'))
+        context.bot.send_photo(GROUP_CHAT_ID, open("images/{}".format(p.file_unique_id), 'rb'))
     update.message.reply_text(
         "Bildiriminiz alindi!\n"
         "Etkilesiminiz icin tesekkurler. Yangin tehlikesi durumunda bana yazmayi unutmayin!"
@@ -191,6 +232,7 @@ def handle_invalid_button(update: Update, context: CallbackContext) -> None:
 
 def main() -> None:
     """Run the bot."""
+
     # We use persistence to demonstrate how buttons can still work after the bot was restarted
     persistence = PicklePersistence(
         filename='persistence.pickle', store_callback_data=True
