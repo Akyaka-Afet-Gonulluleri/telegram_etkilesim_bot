@@ -26,6 +26,9 @@ from telegram.ext import (
 load_dotenv()
 
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
+POD_OWNER = os.getenv('POD_OWNER')
+POD_KEY = os.getenv('POD_KEY')
+GROUP_CHAT_ID = os.getenv('GROUP_CHAT_ID')
 APP_ENV = os.getenv('APP_ENV','development')
 PORT = int(os.environ.get('PORT', '5000'))
 APP_URL = os.environ.get('APP_URL')
