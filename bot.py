@@ -145,7 +145,7 @@ def finalize(update: Update, context: CallbackContext) -> None:
     for l in sess["data"]["location"]:
         context.bot.send_location(GROUP_CHAT_ID, location=l)
     for p in sess["data"]["photo"]:
-        context.bot.send_photo(GROUP_CHAT_ID, open("images/{}".format(p.file_unique_id), 'rb'))
+        context.bot.send_photo(GROUP_CHAT_ID, p.file_id)
     update.message.reply_text(
         "Bildiriminiz alindi!\n"
         "Etkilesiminiz icin tesekkurler. Yangin tehlikesi durumunda bana yazmayi unutmayin!"
@@ -211,8 +211,7 @@ def text_handler(update: Update, context: CallbackContext):
 def image_handler(update: Update, context: CallbackContext):
     sess = get_session(update.effective_user.username)
     file = context.bot.getFile(update.message.photo[-1].file_id)
-    print("Downloading file", file)
-    file.download("images/{}".format(file.file_unique_id))
+    print("Storing file object", file)
     sess["data"]["photo"].append(file)
     if check_finalized(update, context):
         finalize(update, context)
