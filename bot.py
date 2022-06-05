@@ -72,7 +72,7 @@ def save_report(session):
     items = []
     edges = []
     files = []
-    item = Report(type=hist[0], subtype=hist[1], status="Unconfirmed")
+    item = Report(category=hist[0], subtype=hist[1], status="Unconfirmed")
 
     try:
         reporter = pod.search({"type":"Person", "displayName": user["username"]})[0]
