@@ -148,7 +148,8 @@ def finalize(update: Update, context: CallbackContext) -> None:
     sess = get_session(update.effective_user.username)
     logger.info("New report {}".format(sess))
     save_report(sess)
-    context.bot.send_message(GROUP_CHAT_ID, "Yeni bildirim yapildi!\nGonderen: {}\nBildiri: {}".format(sess["user"]["username"], "-".join(sess["history"])))
+    name = sess["user"]["username"] if sess["user"]["username"] else sess["user"]["first_name"]
+    context.bot.send_message(GROUP_CHAT_ID, "Yeni bildirim yapildi!\nGonderen: {}\nBildiri: {}".format(name, "-".join(sess["history"])))
     for l in sess["data"]["location"]:
         context.bot.send_location(GROUP_CHAT_ID, location=l)
     for p in sess["data"]["photo"]:
