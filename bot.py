@@ -4,7 +4,8 @@ from tabnanny import check
 from typing import List
 from copy import deepcopy
 from pymemri.pod.client import PodClient
-from schema import Fire, Risk, WaterSource, Tank, Person, Edge
+from pymemri.data.schema import Person, Edge, Location, Photo
+from schema import Report
 import os
 
 #from config import TELEGRAM_TOKEN
@@ -47,7 +48,7 @@ if not POD_OWNER or not POD_KEY:
 
 # Init Pod connection
 pod = PodClient(owner_key=POD_OWNER, database_key=POD_KEY)
-pod.add_to_schema(Person, Fire, Risk, WaterSource, Tank)
+pod.add_to_schema(Person, Location, Photo, Report)
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO
@@ -64,12 +65,15 @@ def get_session(name):
         sessions[name] = deepcopy(DEFAULT_SESSION)
         return sessions[name]
 
-def save_session(session):
+def save_report(session):
     user = session["user"]
     hist = session["history"]
     data = session["data"]
     items = []
     edges = []
+    files = []
+    item = Report(type=hist[0], subtype=hist[1], status="Unconfirmed")
+
     try:
         reporter = pod.search({"type":"Person", "displayName": user["username"]})[0]
         print("We already have the reporter in db", reporter.displayName)
@@ -77,22 +81,25 @@ def save_session(session):
         reporter = Person(displayName=user["username"], firstName=user["first_name"])
         print("Adding new reporter:", reporter.displayName)
         items.append(reporter)
-
-    if hist[0] == "Yangın":
-        item = Fire(semptom=hist[1], status="Unconfirmed")
-    elif hist[0] == "Su kaynağı":
-        item = WaterSource(sourceType=hist[1], status="Unconfirmed")
-    elif hist[0] == "Tanker":
-        item = Tank(tankType=hist[1], status="Unconfirmed")
-    elif hist[0] == "Risk":
-        item = Risk(riskType=hist[1], status="Unconfirmed")
-    
     edges.append(Edge(item, reporter, "reporter"))
-    # set latlong
-    item.latitude = data["location"][0]["latitude"]
-    item.longitude = data["location"][0]["longitude"]
+    
+    for l in data["location"]:
+        location = Location(latitude=l.latitude, longitude=l.longitude)
+        items.append(location)
+        edges.append(Edge(item, location, "location"))
+
+    for file in data["photo"]:
+        image_bytes = bytes(file.download_as_bytearray())
+        photo = Photo.from_bytes(image_bytes)
+        edges += photo.get_edges("file")
+        items += [photo, photo.file[0]]
+        edges.append(Edge(item, photo, 'photo'))
+        files.append(photo.data)
     items.append(item)
     pod.bulk_action(create_items=items, create_edges=edges)
+
+    for file in files:
+        pod._upload_image(file, asyncFlag=False)
 
 
 def start(update: Update, context: CallbackContext) -> None:
@@ -140,7 +147,7 @@ def check_finalized(update: Update, context: CallbackContext):
 def finalize(update: Update, context: CallbackContext) -> None:
     sess = get_session(update.effective_user.username)
     logger.info("New report {}".format(sess))
-    save_session(sess)
+    save_report(sess)
     context.bot.send_message(GROUP_CHAT_ID, "Yeni bildirim yapildi!\nGonderen: {}\nBildiri: {}".format(sess["user"]["username"], "-".join(sess["history"])))
     for l in sess["data"]["location"]:
         context.bot.send_location(GROUP_CHAT_ID, location=l)
@@ -211,7 +218,6 @@ def text_handler(update: Update, context: CallbackContext):
 def image_handler(update: Update, context: CallbackContext):
     sess = get_session(update.effective_user.username)
     file = context.bot.getFile(update.message.photo[-1].file_id)
-    print("Storing file object", file)
     sess["data"]["photo"].append(file)
     if check_finalized(update, context):
         finalize(update, context)
