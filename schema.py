@@ -4,7 +4,7 @@ from pymemri.data.schema import EdgeList, Item
 class Report(Item):
     description = """A report"""
     properties = Item.properties + [
-        "categpry",
+        "category",
         "subtype",
         "size",
         "importance", # in a scale between 0-10
@@ -14,7 +14,7 @@ class Report(Item):
 
     def __init__(
         self,
-        categpry: str = None,
+        category: str = None,
         subtype: str = None,
         size: int = None,
         importance: int = None,
@@ -27,7 +27,7 @@ class Report(Item):
         super().__init__(**kwargs)
 
         # Properties
-        self.categpry: Optional[str] = categpry
+        self.category: Optional[str] = category
         self.subtype: Optional[str] = subtype
         self.size: Optional[int] = size
         self.importance: Optional[int] = importance
