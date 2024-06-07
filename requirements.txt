@@ -6,8 +6,7 @@ python-telegram-bot==13.12
 pytz==2022.1
 pytz-deprecation-shim==0.1.0.post0
 six==1.16.0
-telegram==0.0.1
 tornado==6.1
 tzdata==2022.1
 tzlocal==4.2
-git+https://gitlab.memri.io/memri/pymemri.git@add_edges_to_schema
+git+https://gitlab.memri.io/memri/pymemri.git@graphQL-prototype

@@ -9,12 +9,16 @@ def get_question(name):
 
 REQUEST_INFO_TEMPLATE = "Lutfen simdi {} lokasyonunu ve fotografini paylasin."
 DEFAULT_SESSION = {
+    "id": None,
     "user": {},
+    "user_info": "",
     "history": [],
     "data": {
         "location": [],
         "photo": []
-    }
+    },
+    "text": "",
+    "status": "Unconfirmed"
 }
 
 OPTIONS = {
